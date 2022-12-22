@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JavaScript fetch Method</title>
+
+    <style>
+        body {
+            background-color: aliceblue;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            letter-spacing: 2px;
+            color: brown;
+            letter-spacing: normal;
+        }
+
+        .post {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .postArea, .commentArea {
+            border: 1px solid red;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .iconNameSurname {
+            background: red;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-content: center;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .postContent, .commentContent {
+            margin-left: 10px;
+        }
+
+        .comments{
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>NAME</th>
+                <th>USERNAME</th>
+                <th>EMAIL</th>
+                <th>ADDRESS</th>
+                <th>COMPANY</th>
+                <th>PHONE</th>
+                <th>WEBSITE</th>
+                <th>ACTION</th>
+            </tr>
+        </thead>
+        <tbody id="data"></tbody>
+    </table>
+
+
+    <table>
+        <thead>
+            <tr>
+                <th>POSTS</th>
+            </tr>
+        </thead>
+        <tbody id="table2data"></tbody>
+    </table>
+
+
+
+
+    <script>
+        var _users = [];
+        fetch("https://jsonplaceholder.typicode.com/users/")
+            .then((response) => response.json())
+            .then(function (users) {
+                _users = users;
+                console.log(users);
+                var placeholder = document.querySelector("#data");
+                var out = "";
+
+                //   for (i = 0; users.length; i++) {
+                //     var product = users[i];
+                //   }
+                //   users.forEach(product=>{
+                //   });
+
+                for (let user of users) {
+                    out += `
+                                    <tr>
+                                        <td>${user.name}</td>
+                                        <td>${user.username}</td>
+                                        <td>${user.email}</td>
+                                        <td>${user.address.city} </br> ${user.address.street} </br> ${user.address.suite} </br> ${user.address.zipcode}</td>
+                                        <td>${user.company.name} </br> ${user.company.bs} </br> ${user.company.catchPhrase} </td>
+                                        <td>${user.phone}</td>
+                                        <td>${user.website}</td>
+                                        <td>
+                                            <button onclick="getPosts(${user.id})">Postları Getir</button>
+                                        </td>
+                                    </tr>`;
+                }
+
+                placeholder.innerHTML = out;
+            });
+
+        function getPosts(userId) {
+
+            var user = _users.find(p => p.id == userId);
+
+            fetch("https://jsonplaceholder.typicode.com/posts?userId=" + user.id)
+                .then((reponse) => reponse.json())
+                .then(function (posts) {
+                    var table2 = document.querySelector("#table2data");
+                    var outData = "";
+                    for (let post of posts) {
+                        getComments(post.id).then(comments => {
+                            outData +=
+                                `<div class="post">
+                                        <div class="postArea">
+                                            <div class="iconNameSurname">
+                                                ${user.name.split(" ")[0][0]}
+                                                ${user.name.split(" ")[1][0]}
+                                            </div>
+                                            <div class="postContent">
+                                                  <h1>${post.title}</h1>
+                                                  <label>${post.body}</label>
+                                            </div>
+                                        </div>
+                                        <div>${comments}</div>
+                                    </div>
+                                    `;
+                            table2.innerHTML = outData;
+                        });
+                    }
+                });
+        }
+
+
+        function getComments(postId) {
+            return new Promise((resolve, reject) => {
+
+                fetch("https://jsonplaceholder.typicode.com/comments?postId=" + postId)
+                    .then((response) => response.json())
+                    .then(function (comments) {
+                        var html = `<div class="comments">`;
+
+                        for (let comment of comments) {
+                            html += `
+                                          <div class="comment">
+                                            <div class=commentArea>
+                                              <div class="iconNameSurname">
+                                                ${comment.email.split(" ")[0][0]}
+                                              </div>
+                                              <div class="commentContent">
+                                                  <h2> ${comment.name}</h2>
+                                                  <h3> ${comment.email}</h3>
+                                                  <label> ${comment.body}</label>
+                                              </div>
+                                           </div>
+                                          </div>
+                                      `;
+                        }
+                        html += `</div>`
+                        resolve(html);
+                    });
+
+            })
+        }
+    </script>
+</body>
+</html>
+
